@@ -1,0 +1,51 @@
+# Harness-server - Hermes Agent (gateway + dashboard) with our SOUL.md and skills
+# - gateway: the agent and its OpenAI-compatible API at http://hermes:8642/v1 for apps on the same
+#   docker network (${DOCKER_NETWORK}, default agent_network - create it once:
+#   docker network create agent_network). Port 8642 is NOT published to the host, and every /v1 call
+#   needs API_SERVER_KEY from data/.env.
+# - dashboard: web UI published on ${DASHBOARD_PUBLISH_ADDR}:${DASHBOARD_PUBLISH_PORT}
+#   (default 0.0.0.0:9119 = reachable from other machines; Hermes always asks for a login
+#   on a non-loopback bind).
+# - ./data holds everything Hermes keeps: config.yaml, data/.env (credentials), SOUL.md, skills,
+#   sessions and databases. Hermes creates it on first start.
+# Every ${…} below is set in .env next to this file; the defaults here are generic.
+services:
+  gateway:
+    image: ${HERMES_IMAGE:-nousresearch/hermes-agent:v0.21.6}
+    container_name: hermes
+    restart: unless-stopped
+    volumes:
+      - ./data:/opt/data
+    environment:
+      # uid/gid Hermes runs as inside the container - owner of the files it writes under ./data
+      - HERMES_UID=${HERMES_UID:-10000}
+      - HERMES_GID=${HERMES_GID:-10000}
+      # serve the API to other containers on the docker network (Hermes' default 127.0.0.1 would
+      # only reach its own container); the port stays unpublished
+      - API_SERVER_HOST=0.0.0.0
+    networks:
+      - agent_network
+    command: ["gateway", "run"]
+
+  dashboard:
+    image: ${HERMES_IMAGE:-nousresearch/hermes-agent:v0.21.6}
+    container_name: hermes-dashboard
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    volumes:
+      - ./data:/opt/data
+    environment:
+      - HERMES_UID=${HERMES_UID:-10000}
+      - HERMES_GID=${HERMES_GID:-10000}
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+    ports:
+      - "${DASHBOARD_PUBLISH_ADDR:-0.0.0.0}:${DASHBOARD_PUBLISH_PORT:-9119}:9119"
+    networks:
+      - agent_network
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open"]
+
+networks:
+  agent_network:
+    external: true
+    name: ${DOCKER_NETWORK:-agent_network}

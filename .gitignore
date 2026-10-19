@@ -1,0 +1,21 @@
+# Hermes keeps everything under data/ - credentials (data/.env, data/auth.json), conversation
+# history, caches and databases. None of it belongs in git. Only what we author is tracked:
+# SOUL.md and our own skills (see the un-ignore rules below).
+data/*
+!data/SOUL.md
+!data/skills/
+data/skills/*
+!data/skills/intelligence/
+
+# compose settings of one deployment - .env.example is the template
+.env
+.env.*
+!.env.example
+
+# old snapshots kept only on the host
+_archive/
+_to_delete/
+*.zip
+*.bak
+*.bak-*
+*.tar.gz
