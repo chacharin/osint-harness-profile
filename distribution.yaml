@@ -20,4 +20,5 @@ distribution_owned:
   - config.yaml
   - skills
   - .env.template
+  - .no-bundled-skills   # only skills/ of this repo: Hermes' bundled skills are not seeded
   - distribution.yaml

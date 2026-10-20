@@ -1,0 +1,2 @@
+# Hermes: do not seed its bundled skills into this profile - only the skills shipped in skills/ are used.
+# Delete this file in the installed profile (or run: hermes -p osint skills opt-in --sync) to add them.
