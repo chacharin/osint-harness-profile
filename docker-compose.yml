@@ -1,13 +1,14 @@
-# Harness-server - Hermes Agent (gateway + dashboard) with our SOUL.md and skills
+# Harness-server - Hermes Agent (gateway + dashboard) to run the osint profile of this repo
+# (install it with: docker exec -u hermes hermes hermes profile install github.com/chacharin/harness-server -y)
 # - gateway: the agent and its OpenAI-compatible API at http://hermes:8642/v1 for apps on the same
 #   docker network (${DOCKER_NETWORK}, default agent_network - create it once:
 #   docker network create agent_network). Port 8642 is NOT published to the host, and every /v1 call
-#   needs API_SERVER_KEY from data/.env.
+#   needs the API_SERVER_KEY of the profile it calls; the osint profile is served at /p/osint/v1.
 # - dashboard: web UI published on ${DASHBOARD_PUBLISH_ADDR}:${DASHBOARD_PUBLISH_PORT}
 #   (default 0.0.0.0:9119 = reachable from other machines; Hermes always asks for a login
 #   on a non-loopback bind).
-# - ./data holds everything Hermes keeps: config.yaml, data/.env (credentials), SOUL.md, skills,
-#   sessions and databases. Hermes creates it on first start.
+# - ./data holds everything Hermes keeps: every profile (data/profiles/osint), credentials, sessions,
+#   databases and the shared workspace (data/workspace). Hermes creates it on first start.
 # Every ${…} below is set in .env next to this file; the defaults here are generic.
 services:
   gateway:

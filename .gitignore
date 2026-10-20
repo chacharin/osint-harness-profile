@@ -1,16 +1,12 @@
-# Hermes keeps everything under data/ - credentials (data/.env, data/auth.json), conversation
-# history, caches and databases. None of it belongs in git. Only what we author is tracked:
-# SOUL.md and our own skills (see the un-ignore rules below).
-data/*
-!data/SOUL.md
-!data/skills/
-data/skills/*
-!data/skills/intelligence/
+# Hermes keeps all its state under data/ (credentials, sessions, databases, caches, every profile).
+# Nothing there belongs in git: the agent itself ships at the repo root as a profile distribution.
+data/
 
-# compose settings of one deployment - .env.example is the template
+# compose settings of one deployment - .env.example is the template; .env.template is the profile's
 .env
 .env.*
 !.env.example
+!.env.template
 
 # old snapshots kept only on the host
 _archive/

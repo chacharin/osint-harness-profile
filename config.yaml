@@ -1,27 +1,27 @@
 # =============================================================================
-# Harness-server — ค่าที่ชุดติดตั้งนี้ตั้งเองใน data/config.yaml
+# config.yaml ของ profile osint — ติดตั้งโดย `hermes profile install`
 # -----------------------------------------------------------------------------
-# Hermes สร้างไฟล์ data/config.yaml เองตอนเริ่มทำงานครั้งแรก ซึ่งมีค่าเริ่มต้นและคำอธิบายของทุกหัวข้อครบแล้ว
-# ไฟล์นี้รวบรวมเฉพาะค่าที่ต่างจากค่าเริ่มต้น ให้นำแต่ละค่าไปแทนค่าเดิมในหัวข้อเดียวกันของ data/config.yaml
-# (ค่าที่ไม่มีในไฟล์นี้ให้คงไว้ตามที่ Hermes สร้าง) แล้วสั่ง docker compose restart gateway
+# ไฟล์นี้มีเฉพาะค่าที่ต่างจากค่าเริ่มต้นของ Hermes ค่าอื่นทั้งหมด Hermes ใช้ค่าเริ่มต้นของตัวเอง
+# `hermes profile update` จะไม่เขียนทับไฟล์นี้ ค่าที่ผู้ใช้แก้ภายหลังจึงยังอยู่
 # =============================================================================
+_config_version: 50                # รูปแบบ config ของ Hermes 0.21.6 (ถ้าไม่ระบุ Hermes จะถือว่าเป็น config เก่ามาก)
 
 # --- LLM ---
 model:
   default: google/gemma-4-31b-it   # model บน OpenRouter ควรเลือก model ที่รองรับภาษาไทยและการเรียกใช้เครื่องมือได้ดี
-  provider: openrouter             # ใช้ OPENROUTER_API_KEY ใน data/.env
+  provider: openrouter             # ใช้ OPENROUTER_API_KEY ในไฟล์ .env ของ profile
   base_url: ''
   api_mode: chat_completions
 
 # --- การทำงานของเอเจนต์ ---
 agent:
-  max_turns: 150                   # จำนวนรอบเรียกเครื่องมือสูงสุดต่อหนึ่งคำสั่ง (ค่าเริ่มต้นของ Hermes คือ 500) ป้องกันการวนไม่รู้จบ
+  max_turns: 150                   # จำนวนรอบเรียกเครื่องมือสูงสุดต่อหนึ่งคำสั่ง (ค่าเริ่มต้นของ Hermes คือ 500)
 terminal:
-  cwd: /opt/data/workspace         # โฟลเดอร์ทำงานของเอเจนต์ ไฟล์ที่บันทึกตามกฎข้อ 3 ใน SOUL.md จะอยู่ที่นี่ (บนเครื่องคือ data/workspace)
+  cwd: /opt/data/workspace         # โฟลเดอร์ทำงานกลาง: แฟ้มงานของ intelligence-analyzer และไฟล์ที่บันทึกตามกฎข้อ 3 อยู่ที่นี่
+                                   # MCP ที่แก้ไฟล์ (mcp-thai-proofread) และแอปที่อ่านไฟล์ต้อง mount โฟลเดอร์เดียวกัน
 
 # --- เครื่องมือ ---
-# ชุดเครื่องมือเมื่อใช้งานผ่าน Hermes CLI ส่วน API ที่แอปเรียก (/v1) ใช้ชุดเครื่องมือมาตรฐานของ API server
-# รายการช่องทางแชทอื่น (telegram, discord, slack ฯลฯ) ที่ Hermes ใส่มาให้ ตัดออกได้ หากไม่ได้ใช้ช่องทางนั้น
+# ชุดเครื่องมือเมื่อใช้งานผ่าน Hermes CLI ส่วน API (/v1) ใช้ชุดเครื่องมือมาตรฐานของ API server
 platform_toolsets:
   cli: [browser, code_execution, computer_use, connections, context_engine, cronjob, delegation, file, memory, session_search, skills, terminal, todo, web]
 browser:
