@@ -1,0 +1,11 @@
+name: usage-telemetry
+version: "1.0.0"
+description: "One JSON line per LLM call, auxiliary call, tool call and finished turn (tokens in/out/reasoning/cache, cost, timings) under <profile>/logs/usage/ - for usage research and performance tuning. Records sizes, ids and timings only, never message content."
+author: Chacharin Lertyosbordin
+provides_hooks:
+  - pre_api_request
+  - post_api_request
+  - api_request_error
+  - post_auxiliary_call
+  - post_tool_call
+  - on_session_end

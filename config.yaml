@@ -29,6 +29,12 @@ browser:
 computer_use:
   backend: cua
 
+# --- plugin ---
+# usage-telemetry (plugins/ ของ repo นี้) บันทึก token และเวลาของการเรียก LLM และเครื่องมือทุกครั้ง
+# ลง logs/usage/ ของ profile สำหรับงานวิจัยและการปรับประสิทธิภาพ (ดู README หัวข้อ "ข้อมูลการใช้งานสำหรับงานวิจัย")
+plugins:
+  enabled: [usage-telemetry]
+
 # --- MCP servers ---
 # แต่ละตัวต้องทำงานอยู่ใน docker network เดียวกับ Hermes ก่อน (ดูลิงก์ใน README)
 # timeout ต้องนานกว่าเวลาที่เครื่องมือใช้จริง มิฉะนั้นเอเจนต์จะเห็นว่าการเรียกล้มเหลวทั้งที่ server ยังทำงานอยู่

@@ -60,9 +60,11 @@ data/
 │       ├── SOUL.md, config.yaml      ← จาก repo
 │       ├── skills/intelligence/      ← จาก repo
 │       ├── .no-bundled-skills        ← จาก repo: ไม่เพิ่ม skill มาตรฐานของ Hermes
+│       ├── plugins/usage-telemetry/  ← จาก repo: บันทึกข้อมูลการใช้งาน
 │       ├── .env                      ← ของคุณ: OPENROUTER_API_KEY, API_SERVER_KEY
 │       ├── sessions/, memories/      ← บทสนทนาและความจำของเอเจนต์ osint
 │       └── logs/                     ← log ของ profile (agent.log, errors.log)
+│           └── usage/                ← ข้อมูลการใช้งาน usage-<วันที่>.jsonl (plugin usage-telemetry)
 └── workspace/                        ← workspace กลาง (terminal.cwd ของ osint)
     ├── collection20-10-2026_09-00/   ← แฟ้มงานของโหมดนักวิเคราะห์
     │   └── step1.md … step4.md
@@ -77,9 +79,10 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 |---|---|---|
 | `SOUL.md` | บุคลิกและกฎการทำงานของเอเจนต์ | ✓ |
 | `skills/intelligence/` | skill `intelligence-analyzer` โหมดนักวิเคราะห์ข่าวกรองแบบ 4 ขั้นตอน (STEEPM) | ✓ |
-| `config.yaml` | ค่าที่ต่างจากค่าเริ่มต้นของ Hermes ได้แก่ model, โฟลเดอร์ทำงาน, เครื่องมือ และ MCP server | ✓ |
+| `config.yaml` | ค่าที่ต่างจากค่าเริ่มต้นของ Hermes ได้แก่ model, โฟลเดอร์ทำงาน, เครื่องมือ, plugin และ MCP server | ✓ |
 | `.env.template` | ค่าลับที่ profile ต้องมี | ✓ (เป็น `.env.EXAMPLE`) |
 | `.no-bundled-skills` | ให้ profile ใช้เฉพาะ skill ของ repo นี้ ไม่เพิ่ม skill มาตรฐานของ Hermes | ✓ |
+| `plugins/usage-telemetry/` | plugin บันทึก token เวลา และค่าใช้จ่ายของการเรียก LLM และเครื่องมือทุกครั้ง (ดู[ข้อมูลการใช้งานสำหรับงานวิจัย](#ข้อมูลการใช้งานสำหรับงานวิจัย)) | ✓ |
 | `distribution.yaml` | ชื่อ เวอร์ชัน เวอร์ชันของ Hermes ที่ต้องใช้ และรายการไฟล์ที่ติดตั้ง | ✓ |
 | `docker-compose.yml`, `.env.example` | ชุดติดตั้ง Hermes บน Docker สำหรับผู้ที่ยังไม่มี Hermes | |
 | `README.md`, `LICENSE` | เอกสาร | |
@@ -390,6 +393,63 @@ docker run --rm --network agent_network curlimages/curl -s http://hermes:8642/p/
 
 บน Windows คำสั่ง curl อาจส่งภาษาไทยที่พิมพ์ในบรรทัดคำสั่งผิดเพี้ยนเป็น `?` ให้บันทึก JSON ของคำขอเป็นไฟล์ UTF-8 แล้วส่งด้วย `-d @request.json` แทน
 
+## ข้อมูลการใช้งานสำหรับงานวิจัย
+
+ทุกกระบวนการเบื้องหลังหนึ่งคำสั่งบันทึก token เวลา และค่าใช้จ่ายของตัวเองในรูปแบบเดียวกัน (schema `harness-usage/1`)
+จึงรวมเป็นชุดข้อมูลเดียวสำหรับวิจัยและปรับประสิทธิภาพของฮาร์ดแวร์และซอฟต์แวร์ได้ เช่น เทียบ model ผู้ให้บริการ เครื่องที่รัน หรือจำนวนเครื่องมือที่เปิดไว้
+ทุกแหล่งบันทึกเฉพาะจำนวน ขนาด id และเวลา ไม่มีคำสั่ง คำตอบ หรือผลของเครื่องมือ
+
+| กระบวนการ | ผู้บันทึก | อ่านได้ที่ |
+|---|---|---|
+| LLM หลักของเอเจนต์ (ทุกรอบ) LLM งานเสริม เช่น ตั้งชื่อเซสชัน และการเรียกเครื่องมือทุกตัว | plugin `usage-telemetry` ของ repo นี้ | `data/profiles/osint/logs/usage/usage-<วันที่>.jsonl` |
+| LLM ที่ตรวจคำสะกด | [mcp-thai-proof-md](https://github.com/chacharin/mcp-thai-proof-md) | `GET http://mcp-thai-proofread:8800/usage` |
+| Perplexity (token ค่าค้นเว็บ และค่าใช้จ่าย) | [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) | `GET http://mcp-perplexity:8081/usage` |
+| LLM และ embedding ที่ LightRAG เรียกเอง | มิเตอร์ของ [mcp-lightrag](https://github.com/chacharin/mcp-lightrag) (ต้องเปิด) | `GET http://mcp-lightrag:8700/usage` |
+
+แอปที่สั่งงานเอเจนต์ (เช่น collector) รวมทุกแหล่งเข้ากับคำสั่งของตัวเองได้ ดู[ข้อ 8 ของสร้างแอปที่สั่งงานเอเจนต์](#8-รวบรวมข้อมูลการใช้งาน)
+
+### plugin usage-telemetry
+
+plugin นี้ใช้ hook ของ Hermes (`post_api_request`, `post_auxiliary_call`, `post_tool_call`, `on_session_end` …) บันทึกหนึ่งบรรทัดต่อหนึ่งเหตุการณ์
+
+| kind | เกิดเมื่อ | ข้อมูลสำคัญ |
+|---|---|---|
+| `llm_call` | เรียก LLM หลักหนึ่งครั้ง | `input_tokens`, `cache_read_tokens`, `cache_write_tokens`, `output_tokens`, `reasoning_tokens`, `cost_usd`, `duration_s`, `ttfb_s`, `output_tps`, `upstream_provider` (ผู้ให้บริการที่รันจริง) และ `detail` (จำนวนข้อความ จำนวนเครื่องมือที่ส่งให้ LLM ขนาดคำขอ ค่าประมาณ token ของ Hermes) |
+| `aux_call` | เรียก LLM งานเสริม | ข้อมูลเดียวกับ `llm_call` และชื่องานใน `tool` เช่น `title_generation` |
+| `tool_call` | เรียกเครื่องมือหนึ่งครั้ง รวมเครื่องมือ MCP (`mcp__<server>__<tool>`) | `duration_s`, `status`, ขนาดของค่าที่ส่งและผลลัพธ์ |
+| `api_error` | เรียก LLM ไม่สำเร็จ | ชนิดของข้อผิดพลาด HTTP status และจำนวนครั้งที่ลองใหม่ |
+| `turn_end` | จบหนึ่งคำสั่ง | สำเร็จ ล้มเหลว หรือถูกขัดจังหวะ และเหตุผล |
+| `process` | ครั้งแรกของแต่ละ process | เวอร์ชันของ Hermes, Python, ระบบปฏิบัติการ, จำนวน CPU และหน่วยความจำของเครื่อง |
+
+ตัวอย่างหนึ่งบรรทัด (`llm_call` รอบที่สองของคำสั่งหนึ่ง ซึ่งอ่าน prompt เดิมจาก cache):
+
+```json
+{"schema": "harness-usage/1", "ts": 1792465715.387, "component": "hermes", "profile": "osint", "host": "413b59fe0213",
+ "kind": "llm_call", "session_id": "bc8a5a06-…", "turn_id": "bc8a5a06-…:b57d9558", "request_id": "…:api:2",
+ "model": "google/gemma-4-31b-it", "provider": "openrouter", "upstream_provider": "Google", "endpoint_host": "openrouter.ai",
+ "started_at": 1792465713.361, "ended_at": 1792465715.359, "duration_s": 1.998, "ttfb_s": 1.372,
+ "input_tokens": 189, "output_tokens": 59, "reasoning_tokens": 35, "cache_read_tokens": 13344, "cache_write_tokens": 0,
+ "prompt_tokens": 13533, "total_tokens": 13592, "output_tps": 94.23, "cost_usd": 0.002725, "cost_status": "upper_bound",
+ "status": "ok", "finish_reason": "stop",
+ "detail": {"approx_input_tokens": 3143, "request_chars": 12572, "tool_count": 24, "message_count": 4, "api_call_count": 2}}
+```
+
+- `cost_usd` คือราคาที่ Hermes ประมาณจากรายการราคาของผู้ให้บริการ หากผู้ให้บริการไม่ประกาศราคาของ cache plugin จะคิด token ที่อ่านจาก cache ในราคา input ปกติ และระบุ `cost_status` เป็น `upper_bound` (ค่าจริงไม่เกินนี้)
+- ค่าใช้จ่ายจริงที่ OpenRouter เรียกเก็บ ดูได้จากหน้า Activity ของ OpenRouter ซึ่งส่งออกเป็น CSV ได้ ใช้ตรวจทานกับข้อมูลชุดนี้
+- เปิดใช้ด้วย `plugins.enabled: [usage-telemetry]` ใน `config.yaml` ของ profile ซึ่งการติดตั้งใหม่มีให้แล้ว profile ที่ติดตั้งก่อนเวอร์ชัน 0.4.0 ต้องเพิ่มบรรทัดนี้เอง เพราะ `hermes profile update` ไม่เขียนทับ `config.yaml` แล้วสั่ง `docker compose restart gateway`
+- ย้ายไฟล์ไปที่อื่นได้ด้วยตัวแปร `HERMES_USAGE_DIR` ใน `.env` ของ profile
+
+### สิ่งที่ข้อมูลชุดนี้แสดงให้เห็นแล้ว
+
+ตัวเลขจากคำสั่งทดสอบหนึ่งคำสั่ง ที่ตรวจคำสะกดหนึ่งคำ ค้นคลังความรู้ และถาม Perplexity หนึ่งข้อ
+
+| สิ่งที่พบ | ตัวเลข |
+|---|---|
+| prompt ของเอเจนต์ส่วนใหญ่คือคำอธิบายเครื่องมือ และถูกส่งใหม่ทุกรอบ | 3 รอบ รวม prompt 44,187 token แต่เป็น token ใหม่เพียง 17,403 ที่เหลือ 26,784 อ่านจาก cache |
+| ค่าประมาณ token ของ Hermes เองต่ำกว่าจริงมากสำหรับภาษาไทยและคำอธิบายเครื่องมือ | `approx_input_tokens` 3,143 เทียบกับ prompt จริง 13,533 |
+| token ที่มองไม่เห็นจากหน้าจอ | LightRAG เรียก LLM 2 ครั้งและ embedding 1 ครั้งต่อหนึ่งคำถาม (ราว 5,400 token) และ Perplexity ใช้ prompt 5,724 token กับค่าค้นเว็บ 0.001 USD ต่อหนึ่งคำถาม |
+| เวลาส่วนใหญ่อยู่ที่ LLM | LLM ของเอเจนต์ 14.8 วินาที จากทั้งหมด 24.3 วินาที (TTFB เฉลี่ย 2.6 วินาที ความเร็วเฉลี่ย 94 token/วินาที) |
+
 ## สร้างแอปที่สั่งงานเอเจนต์
 
 หัวข้อนี้สำหรับผู้ที่ต้องการสร้างแอปของตัวเองบนเอเจนต์ osint (หรือ profile อื่นของ Hermes) เช่น หน้าจอสั่งงาน ระบบอัตโนมัติ หรือบอต
@@ -548,6 +608,19 @@ skill ที่ทำงานเป็นขั้น เช่น `intelligenc
 | `DELETE /api/sessions/<session id>` | เซสชันและขั้นตอนทั้งหมด (Hermes ไม่ยอมลบระหว่างที่เซสชันกำลังทำงาน) |
 
 ไฟล์ใน workspace ไม่ถูกลบตามไปด้วย
+
+### 8. รวบรวมข้อมูลการใช้งาน
+
+แอปผูกข้อมูลการใช้งานของทุกกระบวนการเข้ากับคำสั่งของตัวเองได้ ด้วย id ที่ได้ตอนสั่งงาน (ดู[ข้อมูลการใช้งานสำหรับงานวิจัย](#ข้อมูลการใช้งานสำหรับงานวิจัย))
+
+1. อ่านไฟล์ของ plugin ผ่าน API ไฟล์ของ dashboard: `GET /api/files?path=/opt/data/profiles/osint/logs/usage` แล้วอ่านไฟล์ของวันที่ต้องการ
+2. อ่าน `GET /usage?since=<epoch>&until=<epoch>` ของ MCP server แต่ละตัว
+3. เชื่อมโยง
+   - ระเบียนของ Hermes ใช้ `session_id` เดียวกับ header `X-Hermes-Session-Id` และเวลาอยู่ในช่วงของคำสั่ง
+   - ระเบียนของ MCP ใช้ชื่อเครื่องมือ (`tool_call` ของ Hermes ชื่อ `mcp__<server>__<tool>`) และเวลาที่อยู่ภายในการเรียกเครื่องมือครั้งนั้น
+   - การเรียก LLM ของ MCP ใช้ `request_id` เดียวกับระเบียน `mcp_tool` ของมัน
+
+collector ทำทั้งหมดนี้ให้แล้ว: หน้าจอแสดง token ของแต่ละคำสั่ง และปุ่ม Export Usage (ZIP) ส่งออก `records.jsonl`, `records.csv`, `runs.csv` (สรุปต่อคำสั่ง) และ `manifest.json` (สภาพแวดล้อมของทุกเครื่อง)
 
 ### เช็กลิสต์ก่อนใช้งานจริง
 

@@ -1,10 +1,10 @@
 # Hermes profile distribution - install with:
 #   hermes profile install github.com/chacharin/harness-server
-# Hermes copies SOUL.md, config.yaml and skills/ into ~/.hermes/profiles/osint/ (or /opt/data/profiles/osint
+# Hermes copies SOUL.md, config.yaml, skills/ and plugins/ into ~/.hermes/profiles/osint/ (or /opt/data/profiles/osint
 # in the Docker image). Profile names are lowercase in Hermes, so the profile is "osint".
 name: osint
-version: 0.3.0
-description: OSINT intelligence analyst agent - persona, a gated 4-step STEEP analyst skill, and MCP tools
+version: 0.4.0
+description: OSINT intelligence analyst agent - persona, a gated 4-step STEEPM analyst skill, and MCP tools
   (Perplexity web search, Thai proofreading, LightRAG knowledge base)
 hermes_requires: ">=0.21.6"
 author: Chacharin Lertyosbordin
@@ -19,6 +19,7 @@ distribution_owned:
   - SOUL.md
   - config.yaml
   - skills
+  - plugins               # usage-telemetry: per-call token and timing log (enabled in config.yaml)
   - .env.template
   - .no-bundled-skills   # only skills/ of this repo: Hermes' bundled skills are not seeded
   - distribution.yaml
