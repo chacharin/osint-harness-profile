@@ -506,7 +506,7 @@ HERMES_DASHBOARD_PASSWORD=<รหัสผ่าน dashboard>
 - ตั้ง read timeout ให้ยาว (เช่น 15 นาที) เพราะช่วงที่เครื่องมือทำงานนาน เช่น `perplexity_research` อาจไม่มี event เลยหลายนาที
 - `response.completed` ไม่ได้รับประกันว่ามีคำตอบ หากการเรียก LLM ครั้งสุดท้ายล้มเหลว (เช่น HTTP 429) งานจะจบโดยไม่มี `output_text` ให้ถือว่างานยังไม่เสร็จ และแจ้งผู้ใช้
 
-ตัวอย่างไคลเอนต์ขั้นต่ำด้วย Python (`httpx`):
+ตัวอย่างการสร้างไคลเอนต์อย่างง่ายด้วย Python (`httpx`):
 
 ```python
 import json, os, httpx
