@@ -85,8 +85,6 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 | `docker-compose.yml`, `.env.example` | ชุดติดตั้ง Hermes บน Docker สำหรับผู้ที่ยังไม่มี Hermes | |
 | `README.md`, `LICENSE` | เอกสาร | |
 
-ชื่อ profile ใน Hermes เป็นตัวพิมพ์เล็กเสมอ จึงใช้ชื่อ `osint`
-
 ## หลักการทำงาน
 
 ```
