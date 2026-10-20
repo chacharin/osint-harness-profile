@@ -25,8 +25,6 @@
 | **profile osint** | repo นี้ ติดตั้งด้วย `hermes profile install` | ตัวตนของเอเจนต์: `SOUL.md`, skill `intelligence-analyzer` และ `config.yaml` (model, โฟลเดอร์ทำงาน, MCP) |
 | **การติดตั้งของคุณ** | โฟลเดอร์ `data/` และ container อื่นใน docker network | ค่าลับ (`.env`), บทสนทนา, ความจำ, workspace และ MCP server ทั้ง 3 ตัว |
 
-repo นี้จึงเล็กมาก (ราว 100 KB) เพราะไม่ได้รวมตัว Hermes มาด้วย อัปเดต Hermes ได้โดยเปลี่ยน image และอัปเดตเอเจนต์ได้ด้วย `hermes profile update` แยกจากกัน
-
 ### container และการเชื่อมต่อ
 
 ```
