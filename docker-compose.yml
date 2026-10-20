@@ -1,5 +1,5 @@
 # Harness-server - Hermes Agent (gateway + dashboard) to run the osint profile of this repo
-# (install it with: docker exec -u hermes hermes hermes profile install github.com/chacharin/harness-server -y)
+# (install it with: docker exec -u hermes hermes hermes profile install github.com/chacharin/osint-harness-profile -y)
 # - gateway: the agent and its OpenAI-compatible API at http://hermes:8642/v1 for apps on the same
 #   docker network (${DOCKER_NETWORK}, default agent_network - create it once:
 #   docker network create agent_network). Port 8642 is NOT published to the host, and every /v1 call

@@ -1,4 +1,4 @@
-# harness-server
+# OSINT-Harness-Profile
 
 เอเจนต์ AI สำหรับงานข่าวกรองจากแหล่งข้อมูลเปิด (OSINT) ที่สร้างบน [Hermes Agent](https://github.com/NousResearch/hermes-agent) พร้อมบุคลิก กฎการทำงาน และ skill นักวิเคราะห์ข่าวกรอง
 ติดตั้งเป็น **profile ของ Hermes ชื่อ `osint`** ด้วยคำสั่งเดียว และให้บริการ API แบบ OpenAI-compatible แก่แอปอื่น โดยเชื่อมต่อเครื่องมือผ่าน MCP ได้แก่ Perplexity, ตรวจคำสะกดภาษาไทย และคลังความรู้ LightRAG
@@ -120,8 +120,8 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 ### 1. ติดตั้ง Hermes บน Docker (ข้ามได้ถ้ามี Hermes อยู่แล้ว)
 
 ```bash
-git clone https://github.com/chacharin/harness-server.git
-cd harness-server
+git clone https://github.com/chacharin/osint-harness-profile.git
+cd osint-harness-profile
 docker network create agent_network   # สร้างครั้งแรกครั้งเดียว หากต้องการใช้ชื่ออื่นให้กำหนดใน DOCKER_NETWORK
 docker compose up -d                  # ครั้งแรก Hermes จะสร้างโฟลเดอร์ data/ เอง
 ```
@@ -131,10 +131,10 @@ docker compose up -d                  # ครั้งแรก Hermes จะ�
 ### 2. ติดตั้ง profile osint
 
 ```bash
-docker exec -u hermes hermes hermes profile install github.com/chacharin/harness-server -y
+docker exec -u hermes hermes hermes profile install github.com/chacharin/osint-harness-profile -y
 ```
 
-(ถ้าติดตั้ง Hermes แบบปกติ ไม่ใช่ Docker ให้สั่ง `hermes profile install github.com/chacharin/harness-server`)
+(ถ้าติดตั้ง Hermes แบบปกติ ไม่ใช่ Docker ให้สั่ง `hermes profile install github.com/chacharin/osint-harness-profile`)
 
 ### 3. ใส่ค่าลับของ profile
 

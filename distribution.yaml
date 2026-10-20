@@ -1,5 +1,5 @@
 # Hermes profile distribution - install with:
-#   hermes profile install github.com/chacharin/harness-server
+#   hermes profile install github.com/chacharin/osint-harness-profile
 # Hermes copies SOUL.md, config.yaml, skills/ and plugins/ into ~/.hermes/profiles/osint/ (or /opt/data/profiles/osint
 # in the Docker image). Profile names are lowercase in Hermes, so the profile is "osint".
 name: osint
