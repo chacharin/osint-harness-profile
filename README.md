@@ -195,6 +195,8 @@ print(reply.output_text)
 docker exec -u hermes hermes hermes -p osint chat -q "ค้นหาข่าวล่าสุดเกี่ยวกับนโยบาย AI ของไทย"
 ```
 
+หากต้องการสร้างแอปของตัวเอง เช่น หน้าจอสั่งงานที่แสดงขั้นตอนการทำงาน เปิดไฟล์ผลงาน และเปิด/ปิด skill ได้ ดู[สร้างแอปที่สั่งงานเอเจนต์](#สร้างแอปที่สั่งงานเอเจนต์)
+
 พอร์ต 8642 ไม่ได้เปิดออกนอก docker network แอปที่อยู่เครื่องอื่นต้องเชื่อมผ่าน HTTPS (reverse proxy) หรือเครือข่ายส่วนตัว แอปที่ตั้งค่าที่อยู่ของเอเจนต์และชื่อ profile แยกกัน ให้ใช้ที่อยู่ `http://hermes:8642/p/osint` และชื่อ profile (model) `osint`
 
 ## วิธีใช้งาน
@@ -387,6 +389,173 @@ docker run --rm --network agent_network curlimages/curl -s http://hermes:8642/p/
 ```
 
 บน Windows คำสั่ง curl อาจส่งภาษาไทยที่พิมพ์ในบรรทัดคำสั่งผิดเพี้ยนเป็น `?` ให้บันทึก JSON ของคำขอเป็นไฟล์ UTF-8 แล้วส่งด้วย `-d @request.json` แทน
+
+## สร้างแอปที่สั่งงานเอเจนต์
+
+หัวข้อนี้สำหรับผู้ที่ต้องการสร้างแอปของตัวเองบนเอเจนต์ osint (หรือ profile อื่นของ Hermes) เช่น หน้าจอสั่งงาน ระบบอัตโนมัติ หรือบอต
+ทุกอย่างใช้ HTTP อย่างเดียว แอปจึงเขียนด้วยภาษาใดก็ได้ และอยู่คนละเครื่องกับ Hermes ได้
+
+### API 2 ชุดที่แอปใช้
+
+| API | ที่อยู่ | ยืนยันตัวตน | ใช้ทำอะไร |
+|---|---|---|---|
+| **gateway** | `http://hermes:8642/p/osint` | header `Authorization: Bearer <API_SERVER_KEY ของ osint>` | สั่งงานเอเจนต์ รับผลแบบ stream อ่านขั้นตอนของเซสชัน และลบบทสนทนา |
+| **dashboard** | `http://hermes-dashboard:9119` | เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน dashboard แล้วใช้ cookie ที่ได้ | อ่านและเขียนไฟล์ใน workspace และเปลี่ยนการตั้งค่าของ profile (เปิด/ปิด skill และเครื่องมือ เปลี่ยน model) |
+
+แอปที่แค่สั่งงานและแสดงผลใช้เฉพาะ gateway ส่วน dashboard จำเป็นเมื่อแอปต้องเปิดไฟล์ที่เอเจนต์เขียน หรือให้ผู้ใช้ปรับการตั้งค่าได้เอง
+เก็บค่าทั้งหมดไว้ใน `.env` ของแอป เช่น
+
+```bash
+HERMES_BASE_URL=http://hermes:8642/p/osint    # ที่อยู่ gateway ของ profile (ลงท้ายด้วย /p/<profile>)
+HERMES_PROFILE=osint                          # ใช้เป็นค่า model ในคำขอ
+HERMES_KEY=<API_SERVER_KEY ของ osint>
+HERMES_DASHBOARD_URL=http://hermes-dashboard:9119
+HERMES_DASHBOARD_USER=<ชื่อผู้ใช้ dashboard>
+HERMES_DASHBOARD_PASSWORD=<รหัสผ่าน dashboard>
+```
+
+เมื่อแอปอยู่คนละเครื่องกับ Hermes ให้เปลี่ยนที่อยู่ทั้งสองเป็นที่อยู่ที่เข้าถึงได้จากเครื่องนั้น และเชื่อมผ่าน HTTPS หรือ VPN
+
+### 1. สั่งงานและคุยต่อในบทสนทนาเดิม
+
+ส่ง `POST /v1/responses` ทุกครั้งที่ผู้ใช้สั่งงาน แล้วเก็บ `id` ของคำตอบ (ขึ้นต้นด้วย `resp_`) ไว้กับบทสนทนานั้น
+คำสั่งถัดไปในบทสนทนาเดียวกันให้ส่ง `previous_response_id` เป็น `id` ล่าสุด เอเจนต์จะจำทุกอย่างก่อนหน้าได้ ส่วนบทสนทนาใหม่ไม่ต้องส่งค่านี้
+
+```
+บทสนทนา A:  "ทำหน้าที่เป็นนักวิเคราะห์ หัวข้อ …"            → resp_1
+            "ต่อไป"  + previous_response_id = resp_1   → resp_2
+            "ต่อไป"  + previous_response_id = resp_2   → resp_3
+```
+
+แอปจึงต้องเก็บแค่ `id` ล่าสุดของแต่ละบทสนทนา Hermes เก็บเนื้อหาทั้งหมดไว้เอง
+
+### 2. รับผลแบบ stream
+
+งานของเอเจนต์มักใช้เวลาหลายนาที ควรส่ง `"stream": true` แล้วอ่านผลทีละ event แบบ Server-Sent Events (บรรทัด `data: <JSON>`)
+ลำดับ event จริงของคำสั่งที่เรียกเครื่องมือ 1 ครั้ง:
+
+| event (`type`) | ใช้ทำอะไรในแอป |
+|---|---|
+| `response.created` | เก็บ `response.id` ไว้เป็น `previous_response_id` ของคำสั่งถัดไป |
+| `response.output_item.added` / `.done` ที่ `item.type` = `reasoning` | ช่วงที่ LLM คิด (ข้อความคิดมาใน `response.reasoning_summary_text.delta`) |
+| `response.output_item.added` ที่ `item.type` = `function_call` | เอเจนต์เริ่มเรียกเครื่องมือ: `item.name` คือชื่อเครื่องมือ `item.arguments` คือค่าที่ส่ง |
+| `response.output_item.added` ที่ `item.type` = `function_call_output` | ผลจากเครื่องมือ (`item.output`) |
+| `response.output_text.delta` | ข้อความคำตอบทีละส่วน (`delta`) ต่อกันแสดงผลได้ทันที |
+| `response.completed` | จบงาน: `response.usage` มี `input_tokens`, `output_tokens`, `total_tokens` |
+| `response.failed` / `response.incomplete` | งานล้มเหลวหรือถูกตัด: ดู `response.error` |
+
+ข้อควรรู้
+- header `X-Hermes-Session-Id` ของคำตอบคือ id ของเซสชัน ใช้อ่านขั้นตอนอย่างละเอียดภายหลัง (ข้อ 3)
+- **Hermes ไม่ปิดการเชื่อมต่อเองหลัง event สุดท้าย** แอปต้องปิดเองเมื่อได้ `response.completed`, `response.failed` หรือ `response.incomplete` มิฉะนั้นจะรอจนหมดเวลา
+- ตั้ง read timeout ให้ยาว (เช่น 15 นาที) เพราะช่วงที่เครื่องมือทำงานนาน เช่น `perplexity_research` อาจไม่มี event เลยหลายนาที
+- `response.completed` ไม่ได้รับประกันว่ามีคำตอบ หากการเรียก LLM ครั้งสุดท้ายล้มเหลว (เช่น HTTP 429) งานจะจบโดยไม่มี `output_text` ให้ถือว่างานยังไม่เสร็จ และแจ้งผู้ใช้
+
+ตัวอย่างไคลเอนต์ขั้นต่ำด้วย Python (`httpx`):
+
+```python
+import json, os, httpx
+
+BASE, KEY, PROFILE = os.environ["HERMES_BASE_URL"], os.environ["HERMES_KEY"], os.environ["HERMES_PROFILE"]
+END = {"response.completed", "response.failed", "response.incomplete"}
+
+def ask(text: str, previous_id: str | None = None) -> str | None:
+    body = {"model": PROFILE, "input": text, "stream": True}
+    if previous_id:
+        body["previous_response_id"] = previous_id
+    headers = {"Authorization": f"Bearer {KEY}", "Accept": "text/event-stream"}
+    timeout = httpx.Timeout(15, read=900)
+    with httpx.stream("POST", f"{BASE}/v1/responses", json=body, headers=headers, timeout=timeout) as r:
+        r.raise_for_status()
+        print("session:", r.headers.get("X-Hermes-Session-Id"))
+        response_id = None
+        for line in r.iter_lines():
+            if not line.startswith("data:"):
+                continue
+            ev = json.loads(line[5:])
+            kind, item = ev.get("type"), ev.get("item") or {}
+            if kind == "response.created":
+                response_id = ev["response"]["id"]
+            elif kind == "response.output_item.added" and item.get("type") == "function_call":
+                print(f"\n[เครื่องมือ] {item['name']} {item.get('arguments', '')[:80]}")
+            elif kind == "response.output_text.delta":
+                print(ev["delta"], end="", flush=True)
+            elif kind in END:
+                print("\n", kind, ev["response"].get("usage"))
+                break                      # ปิดการเชื่อมต่อเอง
+    return response_id
+
+rid = ask("ทำหน้าที่เป็นนักวิเคราะห์ หัวข้อ: สถานการณ์ความมั่นคงในทะเลอันดามัน")
+rid = ask("ต่อไป", rid)
+```
+
+### 3. แสดงขั้นตอนการทำงานและเวลาของแต่ละขั้น
+
+stream บอกได้ว่าเรียกเครื่องมืออะไร แต่ไม่มีเวลาที่แน่นอนของแต่ละข้อความ
+ระหว่างงานยังไม่จบ ให้แอปอ่าน `GET /api/sessions/<session id>/messages` ทุก 3–5 วินาที และอ่านอีกครั้งหลังจบงาน เพื่อได้ `timestamp`, ข้อความคิดของ LLM และผลของเครื่องมือครบทุกขั้น (รูปแบบข้อมูลและวิธีคำนวณเวลาดูใน[การวัดเวลาและค่าใช้จ่ายของแต่ละขั้น](#การวัดเวลาและค่าใช้จ่ายของแต่ละขั้น))
+ผลของเครื่องมือในข้อมูลนี้ถูกห่อด้วยแท็ก `<untrusted_tool_result …>` ให้ตัดแท็กออกก่อนแสดงผล
+
+### 4. เปิดไฟล์ที่เอเจนต์เขียน
+
+ไฟล์ของเอเจนต์อยู่ใน `/opt/data/workspace` ภายใน Hermes แอปที่อยู่เครื่องเดียวกันจะ mount `data/workspace` ไว้ก็ได้ แต่แอปที่อยู่คนละเครื่องต้องใช้ API ไฟล์ของ dashboard ซึ่งใช้ได้ทั้งสองกรณี
+
+ขั้นแรกเข้าสู่ระบบ dashboard แล้วเก็บ cookie ไว้ใช้กับทุกคำขอ หากได้ HTTP 401 ภายหลัง ให้เข้าสู่ระบบใหม่แล้วส่งซ้ำ
+
+```json
+POST /auth/password-login
+{"provider": "basic", "username": "<ชื่อผู้ใช้>", "password": "<รหัสผ่าน>", "next": "/"}
+```
+
+| Route | ใช้ทำอะไร |
+|---|---|
+| `GET /api/files?path=/opt/data/workspace` | รายการไฟล์ในโฟลเดอร์: `entries` มี `name`, `path`, `is_directory`, `size`, `mtime` |
+| `GET /api/files/read?path=<path เต็ม>` | อ่านไฟล์: เนื้อหาอยู่ใน `data_url` (`data:<ชนิด>;base64,<เนื้อหา>`) |
+| `POST /api/files/upload` `{"path": …, "data_url": …, "overwrite": true}` | เขียนไฟล์ (เนื้อหาเข้ารหัสเป็น `data_url` แบบเดียวกัน) |
+| `POST /api/files/mkdir` `{"path": …}` | สร้างโฟลเดอร์ |
+
+path ทุกตัวเป็น path เต็มภายใน Hermes (ขึ้นต้นด้วย `/opt/data/`) API นี้ไม่ยอมให้อ่านไฟล์ค่าลับ เช่น `.env` และ `auth.json`
+อย่าส่ง `?profile=` กับ API ไฟล์ เพราะ workspace กลางอยู่นอกโฟลเดอร์ของ profile
+
+### 5. ติดตามงานหลายขั้นของ skill
+
+skill ที่ทำงานเป็นขั้น เช่น `intelligence-analyzer` เขียนผลของทุกขั้นเป็นไฟล์ แอปจึงใช้ไฟล์เหล่านี้บอกความคืบหน้าได้แม่นกว่าการอ่านข้อความตอบ
+
+- แฟ้มงานของแต่ละภารกิจคือโฟลเดอร์ `collection<วันที่>_<เวลา>/` และขั้นที่ทำเสร็จแล้วคือ `step1.md` … `step4.md` ที่มีอยู่
+- ปุ่ม "ขั้นต่อไป" ของแอปคือการส่ง `"ต่อไป"` พร้อม `previous_response_id`
+- หากเอเจนต์จบรอบโดยยังไม่ได้เขียนไฟล์ของขั้นปัจจุบัน (เช่น ถูกตัดเพราะครบ `agent.max_turns`) แอปส่งคำสั่งให้ทำขั้นนั้นต่อได้ เช่น "ทำขั้นปัจจุบันของแฟ้มงานเดิมให้ครบ" โดยควรจำกัดจำนวนครั้งที่ส่งซ้ำ
+
+### 6. ให้ผู้ใช้ปรับการตั้งค่าของเอเจนต์
+
+ทุก route ในตารางนี้เป็นของ dashboard ให้ต่อท้าย `?profile=osint` เพื่อให้มีผลกับ profile osint (ไม่ใส่ = profile default)
+
+| ต้องการ | Route |
+|---|---|
+| อ่านการตั้งค่า | `GET /api/config` (`model` ถูกย่อเหลือชื่อ) หรือ `GET /api/config/raw` (ค่า `yaml` คือข้อความตามไฟล์) |
+| แก้การตั้งค่าบางส่วน | `PUT /api/config` `{"config": {…เฉพาะส่วนที่แก้…}}` ระบบรวมกับค่าเดิมให้ แต่ค่าที่เป็นรายการจะถูกแทนทั้งรายการ |
+| รายการ skill และเปิด/ปิดทีละตัว | `GET /api/skills` และ `PUT /api/skills/toggle` `{"name": …, "enabled": …}` |
+| เปิด/ปิด skill ทั้งหมดในครั้งเดียว | `PUT /api/config` `{"config": {"skills": {"disabled": [<ชื่อ skill>, …]}}}` (ส่ง `[]` = เปิดทั้งหมด) เร็วกว่าการสั่งทีละตัวมาก |
+| รายการเครื่องมือ | `GET /v1/toolsets` ของ **gateway** (ชุดเครื่องมือที่เอเจนต์ได้รับจริงทาง API) และ `GET /api/mcp/servers` ของ dashboard |
+| เปิด/ปิดเครื่องมือหรือ MCP server | `PUT /api/config` `{"config": {"agent": {"disabled_toolsets": [<ชื่อ>, …]}}}` |
+| เปลี่ยน model | `POST /api/model/set` `{"scope": "main", "provider": …, "model": …}` (เพิ่ม `base_url` และ `api_key` ได้สำหรับ endpoint ของตัวเอง) |
+
+ทุกการเปลี่ยนแปลงมีผลกับ**บทสนทนาใหม่**เท่านั้น บทสนทนาที่คุยต่อด้วย `previous_response_id` ยังใช้ prompt และรายการเครื่องมือชุดเดิม
+เพราะ `PUT /api/config` แทนค่ารายการทั้งรายการ ให้อ่านค่าปัจจุบันก่อนแก้ทุกครั้ง และให้แอปแก้การตั้งค่าครั้งละหนึ่งคำขอเพื่อไม่ให้ทับกัน
+
+### 7. ลบบทสนทนา
+
+| Route (gateway) | ลบอะไร |
+|---|---|
+| `DELETE /v1/responses/<response id>` | บทสนทนาที่เก็บไว้สำหรับ `previous_response_id` (ลบทุก `id` ของบทสนทนานั้น) |
+| `DELETE /api/sessions/<session id>` | เซสชันและขั้นตอนทั้งหมด (Hermes ไม่ยอมลบระหว่างที่เซสชันกำลังทำงาน) |
+
+ไฟล์ใน workspace ไม่ถูกลบตามไปด้วย
+
+### เช็กลิสต์ก่อนใช้งานจริง
+
+- เก็บ `API_SERVER_KEY` และรหัสผ่าน dashboard ไว้ฝั่ง server ของแอปเท่านั้น ห้ามส่งให้เว็บเบราว์เซอร์ เพราะผู้ที่มี key นี้สั่งเอเจนต์ใช้ `terminal` ได้
+- ให้แอปมีระบบเข้าสู่ระบบของผู้ใช้เอง แล้วแอปเป็นผู้เรียก Hermes แทนผู้ใช้
+- ตั้งเวลาสูงสุดต่อคำสั่ง และแสดงสถานะ "ยังไม่เสร็จ" แทนการรอไม่สิ้นสุด
+- เก็บ `id` ของคำตอบและเซสชันไว้ในฐานข้อมูลของแอป เพื่อเปิดบทสนทนาเดิมและลบได้ภายหลัง
+- ทดสอบกับคำสั่งสั้น ๆ ก่อน เช่น "สวัสดี" แล้วจึงทดสอบโหมดนักวิเคราะห์ เพราะแต่ละขั้นใช้ token หลายหมื่น
 
 ## การปรับแต่งและการอัปเดต
 
