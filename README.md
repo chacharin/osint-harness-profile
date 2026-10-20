@@ -48,7 +48,7 @@ repo นี้จึงเล็กมาก (ราว 100 KB) เพราะ�
 ```
 
 - Hermes 0.21 ให้มี **gateway เพียงตัวเดียวต่อเครื่อง** คือ gateway ของ profile `default` ซึ่งให้บริการทุก profile ผ่าน path `/p/<profile>/` profile osint จึงไม่ต้องเปิด gateway ของตัวเอง แต่มี `API_SERVER_KEY` ของตัวเอง
-- **MCP ที่แก้ไฟล์ใน workspace (mcp-thai-proofread) ต้องอยู่เครื่องเดียวกับ Hermes** และ mount `data/workspace` ส่วน MCP ที่คุยผ่าน HTTP อย่างเดียว (perplexity, lightrag) และแอปที่เรียก API แยกไปไว้ที่อื่นได้
+- **MCP ทั้งสามตัวและแอปที่เรียก API แยกไปไว้เครื่องอื่นได้** mcp-thai-proofread ซึ่งต้องแก้ไฟล์ใน workspace จะอ่านและเขียนไฟล์ผ่าน API ไฟล์ของ dashboard ของ Hermes (`/api/files/…`) เมื่ออยู่คนละเครื่อง หรือ mount `data/workspace` โดยตรงเมื่ออยู่เครื่องเดียวกัน
 
 ### โฟลเดอร์ `data/` หลังติดตั้ง
 
@@ -109,7 +109,7 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 - **OpenRouter API key** ขอได้ที่ https://openrouter.ai/keys
 - **MCP server ทั้ง 3 ตัว** ที่ทำงานอยู่ใน docker network เดียวกับ Hermes หากยังไม่มี ให้ติดตั้งตาม README ของแต่ละตัว
   - [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) ค้นหาเว็บและถามตอบผ่าน Perplexity
-  - [mcp-thai-proof-md](https://github.com/chacharin/mcp-thai-proof-md) ตรวจและแก้คำสะกดภาษาไทย (ต้อง mount `data/workspace` ของ Hermes)
+  - [mcp-thai-proof-md](https://github.com/chacharin/mcp-thai-proof-md) ตรวจและแก้คำสะกดภาษาไทย (เข้าถึง workspace ผ่าน dashboard ของ Hermes หรือ mount `data/workspace`)
   - [mcp-lightrag](https://github.com/chacharin/mcp-lightrag) คลังความรู้ LightRAG
 
   เอเจนต์ยังทำงานได้แม้ขาด MCP server บางตัว เพียงแต่จะไม่มีเครื่องมือของตัวนั้น
@@ -416,7 +416,7 @@ skill `hermes-agent` เป็น skill ที่ Hermes เพิ่มให�
 | เรียก `/p/osint/...` แล้วไม่พบ profile | gateway ยังไม่ค้นพบ profile รอ 30 วินาทีหลังติดตั้ง หรือสั่ง `docker compose restart gateway` |
 | log มีข้อความ `config predates version 12` | `config.yaml` ของ profile ไม่มี `_config_version` ให้เพิ่มค่าเดียวกับใน `data/config.yaml` |
 | เอเจนต์บอกว่าไม่มีเครื่องมือ perplexity หรือ lightrag | MCP server ตัวนั้นไม่ทำงาน หรือไม่อยู่ใน docker network เดียวกัน ตรวจ `MCP: registered` ใน log ของ profile |
-| `proofread_thai` หาไฟล์ไม่เจอ | mcp-thai-proofread ไม่ได้ mount `data/workspace` ของ Hermes หรือไม่ได้ตั้ง `PATH_PREFIXES=/opt/data/workspace/` |
+| `proofread_thai` หาไฟล์ไม่เจอ | ไม่ได้ตั้ง `PATH_PREFIXES=/opt/data/workspace/` หรือ mcp-thai-proofread เข้าถึง workspace ไม่ได้ (ดู `workspace` ใน `/health` ของ mcp-thai-proofread: ยังไม่ได้ตั้งบัญชี dashboard หรือยังไม่ได้ mount `data/workspace`) |
 | dashboard ไม่เปิด | ยังไม่ได้ตั้ง `dashboard.basic_auth` ใน `data/config.yaml` (ดูขั้นตอนที่ 5) |
 | ตอบช้าหรือค้าง | ดูสถานะผู้ให้บริการ LLM และวงเงิน OpenRouter ก่อน เพราะเวลาส่วนใหญ่อยู่ที่ LLM |
 
