@@ -76,7 +76,7 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 | ไฟล์ | หน้าที่ | ติดตั้งเข้า profile |
 |---|---|---|
 | `SOUL.md` | บุคลิกและกฎการทำงานของเอเจนต์ | ✓ |
-| `skills/intelligence/` | skill `intelligence-analyzer` โหมดนักวิเคราะห์ข่าวกรองแบบ 4 ขั้นตอน (STEEPM) | ✓ |
+| `skills/intelligence/` | skill `intelligence-analyzer` โหมดนักวิเคราะห์ข่าวกรองแบบ 4 ขั้นตอน (STEEPM) ค้นเว็บด้วยเครื่องมือเดียวที่กำหนดไว้ในข้อ 5 ของ `SKILL.md` (ปัจจุบัน `perplexity_search`) | ✓ |
 | `config.yaml` | ค่าที่ต่างจากค่าเริ่มต้นของ Hermes ได้แก่ model, โฟลเดอร์ทำงาน, เครื่องมือ, plugin และ MCP server | ✓ |
 | `.env.template` | ค่าลับที่ profile ต้องมี | ✓ (เป็น `.env.EXAMPLE`) |
 | `.no-bundled-skills` | ให้ profile ใช้เฉพาะ skill ของ repo นี้ ไม่เพิ่ม skill มาตรฐานของ Hermes | ✓ |
@@ -107,7 +107,7 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 - **Hermes Agent เวอร์ชัน 0.21.6 ขึ้นไป** ถ้ายังไม่มี ใช้ `docker-compose.yml` ใน repo นี้ได้
 - **OpenRouter API key** ขอได้ที่ https://openrouter.ai/keys
 - **MCP server ทั้ง 3 ตัว** ที่ทำงานอยู่ใน docker network เดียวกับ Hermes หากยังไม่มี ให้ติดตั้งตาม README ของแต่ละตัว
-  - [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) ค้นหาเว็บและถามตอบผ่าน Perplexity profile นี้ใช้ `perplexity_search` และ `perplexity_ask` จึงต้องตั้ง `ENABLE_PERPLEXITY_ASK=true` ใน `.env` ของ mcp-perplexity เพราะไฟล์ตั้งต้นเปิดไว้เฉพาะ search
+  - [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) ค้นหาเว็บและถามตอบผ่าน Perplexity skill นักวิเคราะห์ใช้เฉพาะ `perplexity_search` ซึ่งไฟล์ตั้งต้นของ mcp-perplexity เปิดไว้แล้ว ส่วนการสั่ง "ถาม Perplexity" ในการคุยทั่วไปใช้ `perplexity_ask` ต้องตั้ง `ENABLE_PERPLEXITY_ASK=true` ก่อน
   - [mcp-thai-proof-md](https://github.com/chacharin/mcp-thai-proof-md) ตรวจและแก้คำสะกดภาษาไทย (เข้าถึง workspace ผ่าน dashboard ของ Hermes หรือ mount `data/workspace`)
   - [mcp-lightrag](https://github.com/chacharin/mcp-lightrag) คลังความรู้ LightRAG
 

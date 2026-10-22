@@ -73,10 +73,13 @@ metadata:
 
 ### 5. เครื่องมือที่ใช้
 
+**เครื่องมือค้นหาเว็บของ skill นี้: `perplexity_search`** (MCP Perplexity `mcp__perplexity`)
+ทุกขั้นที่สั่งให้ "ค้นหาเว็บ" หมายถึงเครื่องมือนี้เพียงตัวเดียว ห้ามใช้เครื่องมือค้นหาอื่นแทนหรือเสริม
+เพื่อให้ผลของภารกิจเทียบกันได้ เมื่อต้องการเปลี่ยนเครื่องมือค้นหา ให้แก้ชื่อในบรรทัดนี้เท่านั้น
+
 | เครื่องมือ | MCP | ใช้เมื่อ |
 |---|---|---|
-| `perplexity_search` | MCP Perplexity (`mcp__perplexity`) | ค้นหาเว็บและรับรายการผลลัพธ์พร้อม URL — เครื่องมือหลักในการหาแหล่งข้อมูล |
-| `perplexity_ask` | MCP Perplexity (`mcp__perplexity`) | ถามข้อเท็จจริงเฉพาะจุดเพื่อหาหรือยืนยันแหล่ง และถามเป็นคำถามย่อยทีละประเด็นเมื่อประเด็นซับซ้อน |
+| `perplexity_search` | MCP Perplexity (`mcp__perplexity`) | ค้นหาเว็บและรับรายการผลลัพธ์พร้อม URL ทั้งการหาแหล่งข้อมูลและการหาแหล่งยืนยัน |
 | `proofread_thai` | MCP Thai Proofread (`mcp__thai_proofread`) | ตรวจและแก้คำสะกดภาษาไทยในไฟล์ `.md` ทุกไฟล์ที่เขียนขึ้น |
 | `proofread_text` | MCP Thai Proofread (`mcp__thai_proofread`) | ตรวจคำสะกดของข้อความก่อนแสดงผลในแชท |
 | `skill_view` | เครื่องมือ skills ของ Hermes | โหลด sub-skill ของแต่ละขั้นจาก `references/` |
