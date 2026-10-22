@@ -41,7 +41,7 @@ plugins:
 mcp_servers:
   perplexity:                      # ค้นหาเว็บและถามตอบผ่าน Perplexity (github.com/chacharin/mcp-perplexity)
     url: http://mcp-perplexity:8080/mcp
-    timeout: 600                   # perplexity_research อาจใช้เวลาหลายนาที
+    timeout: 600                   # ต้องนานกว่า PERPLEXITY_TIMEOUT_MS ของ mcp-perplexity (ค่าเริ่มต้น 300 วินาที)
   thai_proofread:                  # ตรวจและแก้คำสะกดภาษาไทย (github.com/chacharin/mcp-thai-proof-md)
     url: http://mcp-thai-proofread:8800/mcp
     timeout: 900                   # เอกสารยาวอาจใช้เวลาหลายนาที

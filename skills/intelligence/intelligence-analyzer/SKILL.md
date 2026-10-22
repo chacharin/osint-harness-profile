@@ -76,9 +76,7 @@ metadata:
 | เครื่องมือ | MCP | ใช้เมื่อ |
 |---|---|---|
 | `perplexity_search` | MCP Perplexity (`mcp__perplexity`) | ค้นหาเว็บและรับรายการผลลัพธ์พร้อม URL — เครื่องมือหลักในการหาแหล่งข้อมูล |
-| `perplexity_research` | MCP Perplexity (`mcp__perplexity`) | วิจัยเชิงลึกจากหลายแหล่งเมื่อประเด็นซับซ้อน |
-| `perplexity_ask` | MCP Perplexity (`mcp__perplexity`) | ถามข้อเท็จจริงเฉพาะจุดเพื่อหาหรือยืนยันแหล่ง |
-| `perplexity_reason` | MCP Perplexity (`mcp__perplexity`) | ช่วยไล่เหตุผลเป็นลำดับขั้นในการวิเคราะห์ (ไม่ใช่แหล่งอ้างอิง) |
+| `perplexity_ask` | MCP Perplexity (`mcp__perplexity`) | ถามข้อเท็จจริงเฉพาะจุดเพื่อหาหรือยืนยันแหล่ง และถามเป็นคำถามย่อยทีละประเด็นเมื่อประเด็นซับซ้อน |
 | `proofread_thai` | MCP Thai Proofread (`mcp__thai_proofread`) | ตรวจและแก้คำสะกดภาษาไทยในไฟล์ `.md` ทุกไฟล์ที่เขียนขึ้น |
 | `proofread_text` | MCP Thai Proofread (`mcp__thai_proofread`) | ตรวจคำสะกดของข้อความก่อนแสดงผลในแชท |
 | `skill_view` | เครื่องมือ skills ของ Hermes | โหลด sub-skill ของแต่ละขั้นจาก `references/` |

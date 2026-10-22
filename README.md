@@ -107,7 +107,7 @@ repo นี้เป็น **Hermes profile distribution** คำสั่ง `h
 - **Hermes Agent เวอร์ชัน 0.21.6 ขึ้นไป** ถ้ายังไม่มี ใช้ `docker-compose.yml` ใน repo นี้ได้
 - **OpenRouter API key** ขอได้ที่ https://openrouter.ai/keys
 - **MCP server ทั้ง 3 ตัว** ที่ทำงานอยู่ใน docker network เดียวกับ Hermes หากยังไม่มี ให้ติดตั้งตาม README ของแต่ละตัว
-  - [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) ค้นหาเว็บและถามตอบผ่าน Perplexity
+  - [mcp-perplexity](https://github.com/chacharin/mcp-perplexity) ค้นหาเว็บและถามตอบผ่าน Perplexity profile นี้ใช้ `perplexity_search` และ `perplexity_ask` จึงต้องตั้ง `ENABLE_PERPLEXITY_ASK=true` ใน `.env` ของ mcp-perplexity เพราะไฟล์ตั้งต้นเปิดไว้เฉพาะ search
   - [mcp-thai-proof-md](https://github.com/chacharin/mcp-thai-proof-md) ตรวจและแก้คำสะกดภาษาไทย (เข้าถึง workspace ผ่าน dashboard ของ Hermes หรือ mount `data/workspace`)
   - [mcp-lightrag](https://github.com/chacharin/mcp-lightrag) คลังความรู้ LightRAG
 
@@ -228,7 +228,7 @@ docker exec -u hermes hermes hermes -p osint chat -q "ค้นหาข่า�
 
 > ค้นหาข่าวล่าสุดเกี่ยวกับนโยบาย AI ของไทย
 
-เมื่อผู้ใช้สั่ง "ค้นหา" เอเจนต์จะใช้ `web_search` ของ Hermes ทันที (กฎข้อ 2) หากต้องการคำตอบที่สรุปพร้อมแหล่งอ้างอิง หรือการค้นคว้าเชิงลึก ให้ระบุว่าใช้ Perplexity เช่น "ถาม Perplexity ว่า …" หรือ "ค้นคว้าเชิงลึกด้วย Perplexity เรื่อง …"
+เมื่อผู้ใช้สั่ง "ค้นหา" เอเจนต์จะใช้ `web_search` ของ Hermes ทันที (กฎข้อ 2) หากต้องการคำตอบที่สรุปพร้อมแหล่งอ้างอิง ให้ระบุว่าใช้ Perplexity เช่น "ถาม Perplexity ว่า …"
 
 ### 3. บันทึกผลงานเป็นไฟล์
 
@@ -307,7 +307,6 @@ token ส่วนใหญ่ของทุกรอบคือคำอธ�
 |---|---|---|
 | ลิงก์และข่าวล่าสุดแบบเร็ว | "ค้นหา …" | `web_search` ของ Hermes |
 | คำตอบสรุปพร้อมแหล่งอ้างอิง | "ถาม Perplexity ว่า …" | `perplexity_ask` |
-| ค้นคว้าเชิงลึกหลายแหล่ง (หลายนาที ราคาสูง) | "ค้นคว้าเชิงลึกด้วย Perplexity เรื่อง …" | `perplexity_research` |
 | เอกสารที่เคยเก็บไว้ | "ค้นจากคลังความรู้ว่า …" | `lightrag_query` |
 
 ## รูปแบบ JSON ของคำขอและผลลัพธ์
@@ -503,7 +502,7 @@ HERMES_DASHBOARD_PASSWORD=<รหัสผ่าน dashboard>
 ข้อควรรู้
 - header `X-Hermes-Session-Id` ของคำตอบคือ id ของเซสชัน ใช้อ่านขั้นตอนอย่างละเอียดภายหลัง (ข้อ 3)
 - **Hermes ไม่ปิดการเชื่อมต่อเองหลัง event สุดท้าย** แอปต้องปิดเองเมื่อได้ `response.completed`, `response.failed` หรือ `response.incomplete` มิฉะนั้นจะรอจนหมดเวลา
-- ตั้ง read timeout ให้ยาว (เช่น 15 นาที) เพราะช่วงที่เครื่องมือทำงานนาน เช่น `perplexity_research` อาจไม่มี event เลยหลายนาที
+- ตั้ง read timeout ให้ยาว (เช่น 15 นาที) เพราะช่วงที่เครื่องมือทำงานนาน เช่น `proofread_thai` กับไฟล์ยาว อาจไม่มี event เลยหลายนาที
 - `response.completed` ไม่ได้รับประกันว่ามีคำตอบ หากการเรียก LLM ครั้งสุดท้ายล้มเหลว (เช่น HTTP 429) งานจะจบโดยไม่มี `output_text` ให้ถือว่างานยังไม่เสร็จ และแจ้งผู้ใช้
 
 ตัวอย่างการสร้างไคลเอนต์อย่างง่ายด้วย Python (`httpx`):

@@ -3,7 +3,7 @@
 # Hermes copies SOUL.md, config.yaml, skills/ and plugins/ into ~/.hermes/profiles/osint/ (or /opt/data/profiles/osint
 # in the Docker image). Profile names are lowercase in Hermes, so the profile is "osint".
 name: osint
-version: 0.4.0
+version: 0.4.1
 description: OSINT intelligence analyst agent - persona, a gated 4-step STEEPM analyst skill, and MCP tools
   (Perplexity web search, Thai proofreading, LightRAG knowledge base)
 hermes_requires: ">=0.21.6"
